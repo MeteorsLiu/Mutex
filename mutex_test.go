@@ -8,11 +8,16 @@ import (
 func TestMutex(t *testing.T) {
 	var lock Mutex
 	var wg sync.WaitGroup
-	wg.Add(4)
+	wg.Add(5)
 	go func() {
 		defer wg.Done()
 		lock.Lock()
 		t.Log("Locked")
+	}()
+	go func() {
+		defer wg.Done()
+		lock.Lock()
+		t.Log("Locked 2")
 	}()
 	go func() {
 		defer wg.Done()
