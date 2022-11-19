@@ -44,6 +44,9 @@ func (m *Mutex) TryLock() bool {
 }
 
 func (m *Mutex) TryUnlock() bool {
+	if !m.IsLocked() {
+		return false
+	}
 	if atomic.CompareAndSwapInt32(&m.grab, UNGRABBED, GRABBED) {
 		m.Unlock()
 		atomic.CompareAndSwapInt32(&m.grab, GRABBED, UNGRABBED)
