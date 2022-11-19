@@ -35,7 +35,7 @@ func TestMutex(t *testing.T) {
 	}()
 	wg.Wait()
 	if lock.IsLocked() {
-		t.Log("Locked 4")
+		t.Log("Unlock 2")
 		lock.Unlock()
 	}
 }
