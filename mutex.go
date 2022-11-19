@@ -19,7 +19,7 @@ type Mutex struct {
 func (m *Mutex) Lock() {
 	atomic.AddInt32(&m.waiter, 1)
 	m.m.Lock()
-	atomic.CompareAndSwapInt32(&m.grab, UNGRABBED, GRABBED)
+	atomic.SwapInt32(&m.grab, GRABBED)
 }
 
 func (m *Mutex) Unlock() {
@@ -31,7 +31,7 @@ func (m *Mutex) Unlock() {
 func (m *Mutex) TryLock() bool {
 	if m.m.TryLock() {
 		atomic.AddInt32(&m.waiter, 1)
-		atomic.CompareAndSwapInt32(&m.grab, UNGRABBED, GRABBED)
+		atomic.SwapInt32(&m.grab, GRABBED)
 		return true
 	}
 	return false
