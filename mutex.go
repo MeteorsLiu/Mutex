@@ -54,12 +54,7 @@ func (m *Mutex) TryLock() bool {
 }
 
 func (m *Mutex) TryUnlock() bool {
-	if !m.IsLocked() {
-		return false
-	}
-
 	m.Unlock()
-
 	return m.IsLocked()
 }
 
