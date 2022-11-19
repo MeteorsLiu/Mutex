@@ -25,7 +25,9 @@ type Mutex struct {
 func (m *Mutex) Lock() {
 	atomic.AddInt32(&m.waiter, 1)
 	m.m.Lock()
-	atomic.CompareAndSwapInt32(&m.state, UNLOCKED, LOCKED)
+	// if a goroutine is unlocking, the CAS may fail, however the lock state must be updated
+	for !atomic.CompareAndSwapInt32(&m.state, UNLOCKED, LOCKED) {
+	}
 }
 
 func (m *Mutex) Unlock() {
@@ -37,7 +39,8 @@ func (m *Mutex) Unlock() {
 func (m *Mutex) TryLock() bool {
 	if m.m.TryLock() {
 		atomic.AddInt32(&m.waiter, 1)
-		atomic.CompareAndSwapInt32(&m.state, UNLOCKED, LOCKED)
+		for !atomic.CompareAndSwapInt32(&m.state, UNLOCKED, LOCKED) {
+		}
 		return true
 	}
 	return false
