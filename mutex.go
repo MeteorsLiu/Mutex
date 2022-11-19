@@ -6,18 +6,12 @@ import (
 )
 
 const (
-	UNLOCKED int32 = iota
-	LOCKED
-)
-
-const (
 	UNGRABBED int32 = iota
 	GRABBED
 )
 
 type Mutex struct {
 	m      sync.Mutex
-	state  int32
 	waiter int32
 	grab   int32
 }
@@ -25,30 +19,19 @@ type Mutex struct {
 func (m *Mutex) Lock() {
 	atomic.AddInt32(&m.waiter, 1)
 	m.m.Lock()
-
-	// if a goroutine is unlocking, the CAS may fail, however the lock state must be updated
-	for !atomic.CompareAndSwapInt32(&m.grab, UNGRABBED, GRABBED) {
-	}
-	atomic.SwapInt32(&m.state, LOCKED)
+	atomic.CompareAndSwapInt32(&m.grab, UNGRABBED, GRABBED)
 }
 
 func (m *Mutex) Unlock() {
-
-	atomic.AddInt32(&m.waiter, -1)
 	m.m.Unlock()
-
-	for !atomic.CompareAndSwapInt32(&m.grab, GRABBED, UNGRABBED) {
-	}
-	atomic.SwapInt32(&m.state, UNLOCKED)
-
+	atomic.AddInt32(&m.waiter, -1)
+	atomic.CompareAndSwapInt32(&m.grab, GRABBED, UNGRABBED)
 }
 
 func (m *Mutex) TryLock() bool {
 	if m.m.TryLock() {
 		atomic.AddInt32(&m.waiter, 1)
-		for !atomic.CompareAndSwapInt32(&m.grab, UNGRABBED, GRABBED) {
-		}
-		atomic.SwapInt32(&m.state, LOCKED)
+		atomic.CompareAndSwapInt32(&m.grab, UNGRABBED, GRABBED)
 		return true
 	}
 	return false
@@ -63,7 +46,7 @@ func (m *Mutex) TryUnlock() bool {
 }
 
 func (m *Mutex) IsLocked() bool {
-	return atomic.LoadInt32(&m.state) == LOCKED && atomic.LoadInt32(&m.grab) == GRABBED
+	return atomic.CompareAndSwapInt32(&m.grab, GRABBED, UNGRABBED)
 }
 
 func (m *Mutex) IsBusy() bool {
