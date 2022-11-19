@@ -50,8 +50,10 @@ func TestMuteX(t *testing.T) {
 	}()
 	go func() {
 		defer wg.Done()
-		lock.Unlock()
-		t.Log("Unlocked 1")
+		if lock.IsLocked() {
+			t.Log("Unlock 1")
+			lock.Unlock()
+		}
 	}()
 	go func() {
 		defer wg.Done()
