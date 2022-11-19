@@ -21,7 +21,8 @@ func TestMutex(t *testing.T) {
 	}()
 	go func() {
 		defer wg.Done()
-		t.Log("is unlocked: ", lock.Unlock())
+		lock.Unlock()
+		t.Log("Unlocked 1")
 	}()
 	go func() {
 		defer wg.Done()
