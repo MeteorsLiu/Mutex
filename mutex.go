@@ -40,6 +40,8 @@ func (m *Mutex) TryLock() bool {
 	return false
 }
 
+// TryUnlock wouldn't promise "unlock", because the goroutines are all randomized.
+// But this function is useful when you don't know the lock state.
 func (m *Mutex) TryUnlock() bool {
 	if !m.IsLocked() {
 		return false
