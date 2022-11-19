@@ -8,7 +8,7 @@ import (
 func TestMutex(t *testing.T) {
 	var lock sync.Mutex
 	var wg sync.WaitGroup
-	wg.Add(4)
+	wg.Add()
 	go func() {
 		defer wg.Done()
 		lock.Lock()
@@ -24,10 +24,7 @@ func TestMutex(t *testing.T) {
 		lock.Unlock()
 		t.Log("Unlocked 1")
 	}()
-	go func() {
-		defer wg.Done()
-		t.Log(lock.IsLocked())
-	}()
 
 	wg.Wait()
+	lock.Unlock()
 }
