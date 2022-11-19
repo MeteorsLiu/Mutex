@@ -25,9 +25,12 @@ type Mutex struct {
 func (m *Mutex) Lock() {
 	atomic.AddInt32(&m.waiter, 1)
 	m.m.Lock()
+
 	// if a goroutine is unlocking, the CAS may fail, however the lock state must be updated
 	for !atomic.CompareAndSwapInt32(&m.state, UNLOCKED, LOCKED) {
 	}
+	// this indicates that the mutex has been locked.
+	atomic.CompareAndSwapInt32(&m.grab, UNGRABBED, GRABBED)
 }
 
 func (m *Mutex) Unlock() {
@@ -41,6 +44,7 @@ func (m *Mutex) TryLock() bool {
 		atomic.AddInt32(&m.waiter, 1)
 		for !atomic.CompareAndSwapInt32(&m.state, UNLOCKED, LOCKED) {
 		}
+		atomic.CompareAndSwapInt32(&m.grab, UNGRABBED, GRABBED)
 		return true
 	}
 	return false
@@ -59,6 +63,10 @@ func (m *Mutex) TryUnlock() bool {
 }
 
 func (m *Mutex) IsLocked() bool {
+	// CAS promises that synchronized before
+	if atomic.CompareAndSwapInt32(&m.grab, GRABBED, UNGRABBED) {
+		return m.state == LOCKED
+	}
 	return atomic.LoadInt32(&m.state) == LOCKED
 }
 
