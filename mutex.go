@@ -33,12 +33,13 @@ func (m *Mutex) Lock() {
 }
 
 func (m *Mutex) Unlock() {
+
 	atomic.AddInt32(&m.waiter, -1)
-	// only one can unlock
-	if atomic.CompareAndSwapInt32(&m.grab, GRABBED, UNGRABBED) {
-		m.m.Unlock()
-		atomic.SwapInt32(&m.state, UNLOCKED)
+	m.m.Unlock()
+
+	for !atomic.CompareAndSwapInt32(&m.grab, GRABBED, UNGRABBED) {
 	}
+	atomic.SwapInt32(&m.state, UNLOCKED)
 
 }
 
@@ -58,7 +59,7 @@ func (m *Mutex) TryUnlock() bool {
 		return false
 	}
 	m.Unlock()
-	return !m.IsLocked()
+	return true
 }
 
 func (m *Mutex) IsLocked() bool {
