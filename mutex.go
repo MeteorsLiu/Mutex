@@ -59,7 +59,7 @@ func (m *Mutex) TryUnlock() bool {
 }
 
 func (m *Mutex) IsLocked() bool {
-	return atomic.LoadInt32(&m.state) == LOCKED
+	return atomic.LoadInt32(&m.state) == LOCKED && atomic.LoadInt32(&m.grab) == GRABBED
 }
 
 func (m *Mutex) IsBusy() bool {
