@@ -31,7 +31,6 @@ func TestMutex(t *testing.T) {
 	}()
 
 	wg.Wait()
-	lock.Unlock()
 }
 
 func TestMuteX(t *testing.T) {
