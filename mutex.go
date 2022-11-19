@@ -27,7 +27,6 @@ func (m *Mutex) Lock() {
 func (m *Mutex) Unlock() {
 	m.m.Unlock()
 	atomic.AddInt32(&m.waiter, -1)
-	atomic.CompareAndSwapInt32(&m.grab, GRABBED, UNGRABBED)
 }
 
 func (m *Mutex) TryLock() bool {
@@ -45,12 +44,14 @@ func (m *Mutex) TryUnlock() bool {
 	if !m.IsLocked() {
 		return false
 	}
-	m.Unlock()
+	if atomic.CompareAndSwapInt32(&m.grab, GRABBED, UNGRABBED) {
+		m.Unlock()
+	}
 	return true
 }
 
 func (m *Mutex) IsLocked() bool {
-	return atomic.CompareAndSwapInt32(&m.grab, GRABBED, UNGRABBED)
+	return atomic.LoadInt32(&m.grab) == GRABBED
 }
 
 func (m *Mutex) IsBusy() bool {
