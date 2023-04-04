@@ -37,16 +37,16 @@ func TestRecursive(t *testing.T) {
 
 	/* Recursive Deadlock Example
 	go func() {
-	defer wg.Done()
-	for i := 0; i < 5; i++ {
-		rm.Lock()
-		incr++
-		t.Logf("2 Get the lock: %d!", incr)
-	}
+		defer wg.Done()
+		for i := 0; i < 5; i++ {
+			rm.Lock()
+			incr++
+			t.Logf("2 Get the lock: %d!", incr)
+		}
 
-	for i := 0; i < 3; i++ {
-		rm.Unlock()
-	}
+		for i := 0; i < 3; i++ {
+			rm.Unlock()
+		}
 	}()
 
 	*/
