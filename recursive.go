@@ -7,34 +7,54 @@ import (
 )
 
 type Recursive struct {
-	state bool
-	mu    sync.Mutex
-	id    int
+	mu  sync.Mutex
+	id  int
+	cnt int
 }
 
 func (r *Recursive) Lock() {
 	currGoID := int(gls.GoID())
+	// we can't get the goid
+	if currGoID == 0 {
+		panic("cannot get the current goid.")
+	}
 	if r.id != currGoID {
 		r.mu.Lock()
 		r.id = currGoID
-		r.state = true
-		return
 	}
 	// same goroutine, recursive lock
 	// in pthread_mutex_lock, they increment the counter and return.
-	// however, we don't need a counter. so do nothing here.
+	// because we own the lock, so there's no race.
+	r.cnt++
+	// overflow
+	if r.cnt == 0 {
+		panic("too many recursive lock.")
+	}
 }
 
 func (r *Recursive) TryLock() bool {
-	return r.mu.TryLock()
+	currGoID := int(gls.GoID())
+	if r.id != currGoID {
+		if r.mu.TryLock() {
+			r.id = currGoID
+			r.cnt++
+			return true
+		}
+		return false
+	}
+	r.cnt++
+	return true
 }
 
 func (r *Recursive) Unlock() {
-	// does it really get locked?
-	if !r.state {
+	// does it really get locked? or are this goroutine really hold the lock?
+	currGoID := int(gls.GoID())
+	if r.id != currGoID || r.cnt == 0 {
 		return
 	}
-	r.state = false
-	r.id = -1
-	r.mu.Unlock()
+	r.cnt--
+	if r.cnt == 0 {
+		r.id = -1
+		r.mu.Unlock()
+	}
 }
