@@ -30,7 +30,7 @@ func TestRecursive(t *testing.T) {
 			incr++
 			t.Logf("2 Get the lock: %d!", incr)
 		}
-		for i := 0; i < 3; i++ {
+		for i := 0; i < 5; i++ {
 			rm.Unlock()
 		}
 	}()
