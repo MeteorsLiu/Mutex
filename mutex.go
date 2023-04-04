@@ -18,9 +18,12 @@ type Mutex struct {
 	state int32
 }
 
-func (m *Mutex) unlocked() {
-	atomic.AddInt32(&m.waiter, -1)
-	atomic.StoreInt32(&m.state, UNGRABBED)
+func (m *Mutex) isUnlocked() bool {
+	if atomic.CompareAndSwapInt32(&m.state, GRABBED, UNGRABBED) {
+		atomic.AddInt32(&m.waiter, -1)
+		return false
+	}
+	return true
 }
 
 func (m *Mutex) Lock() {
@@ -30,7 +33,9 @@ func (m *Mutex) Lock() {
 }
 
 func (m *Mutex) Unlock() {
-	m.unlocked()
+	atomic.AddInt32(&m.waiter, -1)
+	// the state must be updated.
+	atomic.StoreInt32(&m.state, UNGRABBED)
 	m.m.Unlock()
 }
 
@@ -57,7 +62,11 @@ func (m *Mutex) TryUnlock() bool {
 
 	// the lock has been locked, then we have to unlock it, so update the unlock state in advance.
 	if !couldBeLocked {
-		m.unlocked()
+		// somebody has unlocked the lock.
+		if m.isUnlocked() {
+			// so there's nothing to do.
+			return false
+		}
 	}
 
 	m.m.Unlock()
