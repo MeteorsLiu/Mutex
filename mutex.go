@@ -58,7 +58,7 @@ func (m *Mutex) TryUnlock() bool {
 	// no matter the lock is locked or not, try to lock it.
 	// if the lock has beed locked, unlock as usual.
 	// if not, still unlock, because we have grabbed the lock.
-	couldBeLocked := m.m.TryLock()
+	couldBeLocked := m.TryLock()
 
 	// the lock has been locked, then we have to unlock it, so update the unlock state in advance.
 	if !couldBeLocked {
